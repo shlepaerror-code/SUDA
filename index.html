@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>СИСТЕМА</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="matrix"></canvas>
+<div id="flicker"></div>
+<div id="glitch"></div>
+<div id="shake-wrap">
+
+  <div class="alert-pop" id="alertHost"></div>
+
+  <header class="topbar">
+    <div class="blink">⚠ КРИТИЧЕСКАЯ ОШИБКА СИСТЕМЫ ⚠</div>
+    <div class="sub">Обнаружено 147 угроз. Данные под угрозой уничтожения.</div>
+  </header>
+
+  <section class="progress-block">
+    <div class="label">Заражение ядра:</div>
+    <div class="bar"><div class="fill" id="fillCore"></div></div>
+    <div class="label">Кража файлов: <span id="stolen">0</span></div>
+    <div class="bar"><div class="fill red" id="fillSteal"></div></div>
+    <div class="label">Скачано котиков: <span id="catsLoaded">0</span> / 2000</div>
+    <div class="bar"><div class="fill" id="fillCats"></div></div>
+  </section>
+
+  <section class="terminal">
+    <div class="term-head">C:\WINDOWS\system32 — root@local</div>
+    <pre id="term"></pre>
+  </section>
+
+  <section class="warn-grid" id="warnGrid"></section>
+
+  <div class="big-warning" id="bigWarn">ВАШ КОМПЬЮТЕР ЗАБЛОКИРОВАН</div>
+
+  <button id="cancelBtn">ОТМЕНИТЬ</button>
+
+  <div id="catStorm"></div>
+  <div id="floatLayer"></div>
+  <div id="playerLayer"></div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
