@@ -1,0 +1,270 @@
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  background:#000;
+  color:#00ff41;
+  font-family: "Courier New", monospace;
+  overflow:hidden;
+  width:100%; height:100%;
+  cursor: crosshair;
+  user-select:none;
+}
+
+#matrix {
+  position:fixed; inset:0;
+  z-index:0;
+  opacity:.45;
+}
+
+#flicker {
+  position:fixed; inset:0;
+  background:rgba(255,0,0,0);
+  pointer-events:none;
+  z-index:5;
+  animation: redFlicker .06s infinite;
+}
+@keyframes redFlicker {
+  0%,100% { background:rgba(255,0,0,0); }
+  50%     { background:rgba(255,0,0,.4); }
+}
+
+#glitch {
+  position:fixed; inset:0;
+  pointer-events:none;
+  z-index:7;
+  mix-blend-mode: screen;
+  background: linear-gradient(transparent 0%, rgba(0,255,65,.06) 50%, transparent 100%);
+  animation: glitchMove .15s steps(2) infinite;
+}
+@keyframes glitchMove {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-6px); }
+  100% { transform: translateY(6px); }
+}
+
+#shake-wrap {
+  position:relative;
+  z-index:2;
+  width:100%; height:100%;
+  padding:20px;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  animation: shake .04s infinite;
+}
+@keyframes shake {
+  0%   { transform: translate(0,0) rotate(0deg); }
+  25%  { transform: translate(-7px,5px) rotate(-.6deg); }
+  50%  { transform: translate(8px,-4px) rotate(.7deg); }
+  75%  { transform: translate(-6px,-6px) rotate(-.4deg); }
+  100% { transform: translate(7px,4px) rotate(.5deg); }
+}
+
+.topbar { text-align:center; }
+.topbar .blink {
+  font-size: 34px;
+  font-weight:bold;
+  color:#ff0033;
+  text-shadow: 0 0 12px #ff0033, 0 0 24px #ff0033, 0 0 60px #ff0033;
+  animation: blink .35s infinite;
+}
+@keyframes blink { 50% { opacity:.15; } }
+.topbar .sub { font-size:15px; color:#ff5555; margin-top:6px; }
+
+.progress-block { display:flex; flex-direction:column; gap:6px; }
+.label { font-size:13px; color:#00ff41; }
+.bar {
+  height:18px;
+  border:1px solid #00ff41;
+  background:#001a00;
+  box-shadow: 0 0 8px #00ff41 inset;
+}
+.bar .fill {
+  height:100%;
+  width:0%;
+  background:#00ff41;
+  transition: width .2s linear;
+}
+.bar .fill.red { background:#ff0033; box-shadow:0 0 12px #ff0033; }
+
+.terminal {
+  border:1px solid #00ff41;
+  background:rgba(0,20,0,.75);
+  flex:1;
+  overflow:hidden;
+  box-shadow: 0 0 20px #00ff41;
+  min-height:110px;
+}
+.term-head {
+  background:#003300;
+  padding:4px 8px;
+  font-size:12px;
+  border-bottom:1px solid #00ff41;
+}
+#term {
+  padding:8px;
+  font-size:13px;
+  line-height:1.35;
+  white-space:pre-wrap;
+  height:100%;
+  overflow:hidden;
+  color:#33ff66;
+}
+
+.warn-grid {
+  display:grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap:6px;
+}
+.warn-grid .cell {
+  border:1px solid #ff0033;
+  background:rgba(255,0,51,.08);
+  color:#ff0033;
+  font-size:10px;
+  text-align:center;
+  padding:4px 2px;
+  animation: pulseCell .9s infinite;
+}
+@keyframes pulseCell { 50% { background:rgba(255,0,51,.35); } }
+
+.big-warning {
+  position:fixed;
+  top:50%; left:50%;
+  transform: translate(-50%,-50%);
+  font-size: 62px;
+  font-weight:bold;
+  color:#ff0033;
+  text-shadow: 0 0 20px #ff0033, 0 0 60px #ff0033;
+  pointer-events:none;
+  z-index:6;
+  opacity:0;
+  animation: bigFlash 1.1s infinite;
+  text-align:center;
+}
+@keyframes bigFlash {
+  0%,100% { opacity:0; transform:translate(-50%,-50%) scale(.9); }
+  20%,60% { opacity:1; transform:translate(-50%,-50%) scale(1); }
+}
+
+#cancelBtn {
+  position:fixed;
+  bottom:20px; right:20px;
+  padding:10px 22px;
+  background:#111;
+  color:#ff0033;
+  border:2px solid #ff0033;
+  font-weight:bold;
+  font-family:inherit;
+  font-size:16px;
+  cursor:pointer;
+  z-index:10;
+}
+#cancelBtn:hover { background:#ff0033; color:#000; }
+
+.alert-pop {
+  position:fixed; inset:0;
+  pointer-events:none;
+  z-index:4;
+}
+.alert-pop .pop {
+  position:absolute;
+  padding:6px 10px;
+  background:#fff;
+  color:#000;
+  border:2px solid #ff0033;
+  font-size:12px;
+  font-weight:bold;
+  white-space:nowrap;
+  animation: popFade 1.4s forwards;
+  box-shadow: 0 0 10px rgba(255,0,51,.8);
+}
+@keyframes popFade {
+  0%   { opacity:0; transform: scale(.6); }
+  15%  { opacity:1; transform: scale(1.05); }
+  80%  { opacity:1; }
+  100% { opacity:0; transform: scale(1.1); }
+}
+
+#catStorm {
+  position:fixed; inset:0;
+  pointer-events:none;
+  z-index:100;
+  overflow:hidden;
+  perspective: 800px;
+}
+#catStorm img {
+  position:absolute;
+  width:120px; height:120px;
+  object-fit:cover;
+  border-radius:8px;
+  box-shadow: 0 0 20px rgba(0,255,65,.6);
+  will-change: transform, opacity;
+  animation: catFly 1.4s ease-in forwards;
+}
+@keyframes catFly {
+  0%   { opacity:0; transform: translate(0,0) scale(.2) rotate(0deg); }
+  10%  { opacity:1; }
+  100% { opacity:0; transform: translate(var(--dx), var(--dy)) scale(var(--sc)) rotate(var(--rot)); }
+}
+
+#floatLayer {
+  position:fixed; inset:0;
+  pointer-events:none;
+  z-index:50;
+}
+.float-win {
+  position:absolute;
+  min-width:220px;
+  background:#111;
+  border:2px solid #00ff41;
+  box-shadow: 0 0 20px #00ff41, 0 0 40px rgba(0,255,65,.4);
+  color:#00ff41;
+  font-size:12px;
+  font-family: "Courier New", monospace;
+  will-change: left, top;
+}
+.float-win .title {
+  background:#003300;
+  padding:3px 6px;
+  font-weight:bold;
+  border-bottom:1px solid #00ff41;
+  display:flex;
+  justify-content:space-between;
+}
+.float-win .body { padding:8px; line-height:1.35; }
+
+#playerLayer {
+  position:fixed; inset:0;
+  pointer-events:none;
+  z-index:70;
+}
+.player-win {
+  position:absolute;
+  width:380px;
+  height:260px;
+  background:#000;
+  border:2px solid #ff0033;
+  box-shadow: 0 0 40px #ff0033;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  animation: playerPulse .5s infinite;
+}
+.player-win .title {
+  background:#ff0033;
+  color:#000;
+  font-weight:bold;
+  font-size:12px;
+  padding:2px 8px;
+  font-family:"Courier New", monospace;
+}
+.player-win canvas {
+  width:100%;
+  height:100%;
+  display:block;
+  background:#000;
+}
+@keyframes playerPulse {
+  50% { box-shadow: 0 0 80px #ff0033, 0 0 140px rgba(255,0,51,.7); }
+}
