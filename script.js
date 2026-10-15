@@ -89,7 +89,7 @@
     setTimeout(() => p.remove(), 1400);
   }, 40);
 
-  // ---------- КНОПКА ----------
+  // ---------- КНОПКА "ОТМЕНИТЬ" (убегает) ----------
   const cancelBtn = document.getElementById('cancelBtn');
   let moves = 0;
   cancelBtn.addEventListener('mouseenter', () => {
@@ -102,8 +102,8 @@
   });
   cancelBtn.addEventListener('click', () => { cancelBtn.textContent = "НЕ РАБОТАЕТ"; });
 
-  // ---------- ЗВУК ----------
-  let audioCtx;
+  // ---------- СИРЕНА ----------
+  let audioCtx = null;
   function startSiren() {
     if (audioCtx) return;
     try {
@@ -139,8 +139,6 @@
       osc3.start();
     } catch (e) {}
   }
-  document.addEventListener('click', startSiren, { once: true });
-  document.addEventListener('keydown', startSiren, { once: true });
 
   // ---------- КОТИКИ ----------
   const CATS_TOTAL = 2000;
@@ -166,14 +164,18 @@
       : "https://placekitten.com/300/300?r=" + i + "_" + Math.random();
     img.onload = () => {
       catsReady++;
-      catsLoadedEl.textContent = catsReady;
-      fillCats.style.width = (catsReady / CATS_TOTAL * 100) + "%";
+      if (catsReady <= CATS_TOTAL) {
+        catsLoadedEl.textContent = catsReady;
+        fillCats.style.width = (catsReady / CATS_TOTAL * 100) + "%";
+      }
     };
     img.onerror = () => {
       img.src = fallbackCat();
       catsReady++;
-      catsLoadedEl.textContent = catsReady;
-      fillCats.style.width = (catsReady / CATS_TOTAL * 100) + "%";
+      if (catsReady <= CATS_TOTAL) {
+        catsLoadedEl.textContent = catsReady;
+        fillCats.style.width = (catsReady / CATS_TOTAL * 100) + "%";
+      }
     };
     catCache.push(img);
   }
@@ -379,12 +381,188 @@
     return "";
   });
 
-  // ---------- ФИЛЬТР ----------
+  // ---------- ФИЛЬТР/ХАОС ----------
   let shakeIntensity = 0;
   setInterval(() => {
     shakeIntensity = (shakeIntensity + 1) % 4;
     document.getElementById('shake-wrap').style.filter =
       `hue-rotate(${shakeIntensity * 25}deg) saturate(${1 + shakeIntensity * 0.6})`;
   }, 90);
+
+  // ============================================================
+  // НОВОЕ: ФУЛЛСКРИН + РИНГТОН + СТОП-КНОПКА + СКАЧИВАНИЕ
+  // ============================================================
+
+  // ---------- ФУЛЛСКРИН НА ПЕРВОМ ТАПЕ ----------
+  function goFullscreen() {
+    const el = document.documentElement;
+    const req =
+      el.requestFullscreen ||
+      el.webkitRequestFullscreen ||
+      el.mozRequestFullScreen ||
+      el.msRequestFullscreen;
+    if (req) {
+      try { req.call(el).catch(() => {}); } catch (e) {}
+    }
+  }
+  document.addEventListener('click', goFullscreen, { once: true });
+  document.addEventListener('touchend', goFullscreen, { once: true });
+
+  // ---------- РИНГТОН ----------
+  let ringCtx = null;
+  let ringTimer = null;
+  let ringStopped = false;
+
+  function startRingtone() {
+    if (ringStopped || ringCtx) return;
+    try {
+      ringCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) { return; }
+
+    function beep(freq, duration, when, volume) {
+      const osc = ringCtx.createOscillator();
+      const gain = ringCtx.createGain();
+      osc.type = "square";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, ringCtx.currentTime + when);
+      gain.gain.linearRampToValueAtTime(volume, ringCtx.currentTime + when + 0.02);
+      gain.gain.setValueAtTime(volume, ringCtx.currentTime + when + duration - 0.02);
+      gain.gain.linearRampToValueAtTime(0, ringCtx.currentTime + when + duration);
+      osc.connect(gain).connect(ringCtx.destination);
+      osc.start(ringCtx.currentTime + when);
+      osc.stop(ringCtx.currentTime + when + duration);
+    }
+
+    function ringCycle() {
+      if (ringStopped || !ringCtx) return;
+      beep(1200, 0.35, 0.00, 0.18);
+      beep(1200, 0.35, 0.45, 0.18);
+      beep(1200, 0.35, 0.90, 0.18);
+      ringTimer = setTimeout(ringCycle, 2400);
+    }
+    ringCycle();
+  }
+
+  document.addEventListener('click', () => {
+    startSiren();
+    startRingtone();
+  }, { once: true });
+  document.addEventListener('keydown', () => {
+    startSiren();
+    startRingtone();
+  }, { once: true });
+  document.addEventListener('touchend', () => {
+    startSiren();
+    startRingtone();
+  }, { once: true });
+
+  // ---------- УБЕГАЮЩАЯ КНОПКА "СТОП ЗВУК" ----------
+  const stopBtn = document.createElement('button');
+  stopBtn.textContent = "СТОП ЗВУК";
+  Object.assign(stopBtn.style, {
+    position: "fixed",
+    left: "50%",
+    top: "50%",
+    transform: "translate(-50%,-50%)",
+    zIndex: "999",
+    padding: "18px 28px",
+    background: "#111",
+    color: "#ff0033",
+    border: "3px solid #ff0033",
+    fontFamily: "Courier New, monospace",
+    fontWeight: "bold",
+    fontSize: "18px",
+    cursor: "pointer",
+    boxShadow: "0 0 20px #ff0033",
+    transition: "left .08s, top .08s",
+  });
+
+  let stopMoves = 0;
+  function moveStop() {
+    if (stopMoves > 15) return;
+    stopMoves++;
+    const w = stopBtn.offsetWidth || 160;
+    const h = stopBtn.offsetHeight || 60;
+    const x = Math.random() * (window.innerWidth  - w);
+    const y = Math.random() * (window.innerHeight - h);
+    stopBtn.style.left = x + "px";
+    stopBtn.style.top  = y + "px";
+    stopBtn.style.transform = "none";
+  }
+  stopBtn.addEventListener("mouseenter", moveStop);
+  stopBtn.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    moveStop();
+  }, { passive: false });
+
+  stopBtn.addEventListener("click", () => {
+    ringStopped = true;
+    if (ringTimer) { clearTimeout(ringTimer); ringTimer = null; }
+    if (ringCtx) { try { ringCtx.close(); } catch (e) {} ringCtx = null; }
+    if (audioCtx) { try { audioCtx.close(); } catch (e) {} }
+    stopBtn.textContent = "ЗВУК ВЫКЛ";
+    stopBtn.style.background = "#003300";
+    stopBtn.style.color = "#00ff41";
+    stopBtn.style.borderColor = "#00ff41";
+  });
+
+  document.body.appendChild(stopBtn);
+
+  // ---------- СКАЧИВАНИЕ 20 КОТИКОВ ЗА ПАРТИЮ ----------
+  let catSavesLeft = 20;
+  let saveInProgress = false;
+
+  function pickCatSrc() {
+    if (catCache.length === 0) return null;
+    const src = catCache[Math.floor(Math.random() * catCache.length)];
+    return src.src;
+  }
+
+  function saveOneCat() {
+    const src = pickCatSrc();
+    if (!src) return;
+    const a = document.createElement('a');
+    a.href = src;
+    a.download = "cat_" + Date.now() + "_" + Math.floor(Math.random() * 9999) + ".jpg";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
+
+  function startCatDownloadBurst() {
+    if (saveInProgress) return;
+    if (catSavesLeft <= 0) catSavesLeft = 20;
+    saveInProgress = true;
+
+    const total = 20;
+    let sent = 0;
+
+    const timer = setInterval(() => {
+      saveOneCat();
+      sent++;
+      catSavesLeft--;
+      if (sent >= total || catSavesLeft <= 0) {
+        clearInterval(timer);
+        saveInProgress = false;
+      }
+    }, 250);
+  }
+
+  document.addEventListener('click', function firstBurst() {
+    startCatDownloadBurst();
+    document.removeEventListener('click', firstBurst);
+  }, { once: true });
+
+  let lastTap = 0;
+  function doubleTapTrigger() {
+    const now = Date.now();
+    if (now - lastTap < 400) {
+      saveInProgress = false;
+      startCatDownloadBurst();
+    }
+    lastTap = now;
+  }
+  document.addEventListener('touchend', doubleTapTrigger);
+  document.addEventListener('click', doubleTapTrigger);
 
 })();
